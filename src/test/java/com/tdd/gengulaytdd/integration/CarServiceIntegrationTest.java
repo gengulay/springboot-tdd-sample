@@ -1,8 +1,10 @@
 package com.tdd.gengulaytdd.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -12,13 +14,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tdd.gengulaytdd.model.Car;
@@ -33,44 +34,55 @@ public class CarServiceIntegrationTest {
 	private MockMvc mvc;
 
 	@Autowired
-	CarRepository carRepository;
+	private CarRepository carRepository;
 
 	@Autowired
 	private TestRestTemplate restTemplate;
 
 	@Before
 	public void setUp() {
-		this.carRepository.save(new Car("rio", "sedan"));
+		carRepository.save(new Car("rio", "sedan"));
+		carRepository.save(new Car("bugatti", "veyron"));
+		carRepository.save(new Car("toyota", "vios"));
 
-	}
-
-	@Test
-	public void createCar_shouldReturnCar() throws Exception {
-
-		mvc.perform(MockMvcRequestBuilders.post("/cars").content(asJsonString(new Car("rio", "sedan")))
-				.contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.jsonPath("$.maker").value("rio"))
-				.andExpect(MockMvcResultMatchers.jsonPath("$.model").value("sedan"));
-
-	}
-
-	@Test
-	public void getCar_shouldFindCar() throws Exception {
-
-		mvc.perform(MockMvcRequestBuilders.get("/cars/{model}", "sedan").accept(MediaType.APPLICATION_JSON))
-				.andDo(print()).andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.jsonPath("$.maker").value("rio"))
-				.andExpect(MockMvcResultMatchers.jsonPath("$.model").value("sedan"));
 	}
 
 	@Test
 	public void getCar() {
 
-		ResponseEntity<Car> response = restTemplate.getForEntity("/cars/sedan", Car.class);
+		ResponseEntity<Car> response = restTemplate.getForEntity("/cars/veyron", Car.class);
 		// assert
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(response.getBody().getMaker()).isEqualTo("rio");
-		assertThat(response.getBody().getModel()).isEqualTo("sedan");
+		assertThat(response.getBody().getMaker()).isEqualTo("bugatti");
+		assertThat(response.getBody().getModel()).isEqualTo("veyron");
+	}
+
+	@Test
+	public void postCar() {
+
+		ResponseEntity<Car> response = restTemplate.postForEntity("/cars", new Car("mercedes", "amg"), Car.class);
+		// assert
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(response.getBody().getMaker()).isEqualTo("mercedes");
+		assertThat(response.getBody().getModel()).isEqualTo("amg");
+	}
+
+	@Test
+	public void getCars() {
+
+		ResponseEntity<List<Car>> response = restTemplate.exchange("/cars", HttpMethod.GET, null,
+				new ParameterizedTypeReference<List<Car>>() {
+				});
+
+		assertNotNull(response.getBody());
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(response.getBody().get(0).getMaker()).isEqualTo("rio");
+		assertThat(response.getBody().get(0).getModel()).isEqualTo("sedan");
+		assertThat(response.getBody().get(1).getMaker()).isEqualTo("bugatti");
+		assertThat(response.getBody().get(1).getModel()).isEqualTo("veyron");
+		assertThat(response.getBody().get(2).getMaker()).isEqualTo("toyota");
+		assertThat(response.getBody().get(2).getModel()).isEqualTo("vioss");
+
 	}
 
 	public static String asJsonString(final Object obj) {
