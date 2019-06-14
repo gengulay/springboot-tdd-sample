@@ -81,7 +81,7 @@ public class CarServiceIntegrationTest {
 		assertThat(response.getBody().get(1).getMaker()).isEqualTo("bugatti");
 		assertThat(response.getBody().get(1).getModel()).isEqualTo("veyron");
 		assertThat(response.getBody().get(2).getMaker()).isEqualTo("toyota");
-		assertThat(response.getBody().get(2).getModel()).isEqualTo("vios");
+		assertThat(response.getBody().get(2).getModel()).isEqualTo("vioss");
 
 	}
 
