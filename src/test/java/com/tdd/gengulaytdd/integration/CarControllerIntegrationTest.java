@@ -57,8 +57,8 @@ public class CarControllerIntegrationTest {
 
 	@Test
 	public void testGetCarByModel() {
-		Car car = restTemplate.getForObject("/car/huayra", Car.class);
-		System.out.println(car.getMaker());
+		Car car = restTemplate.getForObject("/car/huayr", Car.class);
+
 		Assert.assertNotNull(car);
 
 	}
